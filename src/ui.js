@@ -1,7 +1,6 @@
 import { STATUS_LABEL } from './indicators.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const ICON = { green: '✓', amber: '!', red: '✕', none: '–' };
 
 function build(el, attrs, children) {
   for (const [key, value] of Object.entries(attrs ?? {})) {
@@ -20,13 +19,20 @@ function build(el, attrs, children) {
 export const h = (tag, attrs, ...children) => build(document.createElement(tag), attrs, children);
 export const svg = (tag, attrs, ...children) => build(document.createElementNS(SVG_NS, tag), attrs, children);
 
-// Status is always an icon and a word as well as a colour.
-export function statusBadge(status) {
-  return h('span', { class: 'badge', 'data-status': status },
-    h('span', { class: 'badge-icon', 'aria-hidden': 'true' }, ICON[status] ?? ICON.none),
-    STATUS_LABEL[status] ?? STATUS_LABEL.none);
+// Status is always a word as well as a colour.
+export function statusLabel(status) {
+  return h('span', { class: 'status', 'data-status': status }, STATUS_LABEL[status] ?? STATUS_LABEL.none);
 }
 
-export function signed(delta) {
-  return `${delta > 0 ? '+' : ''}${delta} vs your 14-day average`;
+// A reading with its unit set smaller beside it, such as "131/82 mmHg".
+export function reading(display, unit) {
+  const split = unit && display.endsWith(` ${unit}`);
+  return h('span', { class: 'value' },
+    split ? display.slice(0, -unit.length - 1) : display,
+    split ? h('span', { class: 'unit' }, ` ${unit}`) : null);
+}
+
+export function versusAverage(delta) {
+  if (delta === 0) return 'Same as your 14-day average';
+  return `${Math.abs(delta)} ${delta > 0 ? 'above' : 'below'} your 14-day average`;
 }

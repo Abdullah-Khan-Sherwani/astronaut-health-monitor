@@ -3,157 +3,176 @@ import { NASA } from './nasa-data.js';
 import { indicatorStates } from './alerts.js';
 import { valueOf } from './rules.js';
 import { boneLossRange, radiation, exerciseMinutes } from './projections.js';
-import { h, statusBadge, signed } from './ui.js';
+import { h, statusLabel, reading, versusAverage } from './ui.js';
 
+const GROUPS = [
+  { title: 'Body', ids: ['bp', 'hr', 'glucose', 'temp', 'sleep', 'mood', 'vision'] },
+  { title: 'Activity and exposure', ids: ['exercise', 'bone', 'radiation'] },
+  { title: 'Cabin', ids: ['cabinCo2', 'cabinTemp'] },
+];
 const RANGES = [{ id: '7', label: '7 days', days: 7 }, { id: '30', label: '30 days', days: 30 }, { id: 'all', label: 'All', days: Infinity }];
-const CHARTED = ['bp', 'hr', 'glucose', 'temp', 'sleep', 'mood', 'cabinCo2', 'cabinTemp'];
-const LIMITS = { cabinCo2: [{ y: 3, label: 'NASA limit 3 mmHg' }], cabinTemp: [{ y: 18, label: 'NASA limit 18 °C' }, { y: 27, label: 'NASA limit 27 °C' }] };
+// These cover a fixed span, so the time range does not apply to them.
+const FIXED_SPAN = ['vision', 'bone', 'radiation'];
+const LIMITS = { cabinCo2: [{ y: 3, label: 'NASA limit' }], cabinTemp: [{ y: 18, label: 'NASA lower limit' }, { y: 27, label: 'NASA upper limit' }] };
 let range = '30';
 
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const flagged = status => status === 'amber' || status === 'red';
+// Datasets named with a leading underscore are drawn but stay out of the legend and the tooltip.
+const unlisted = label => label.startsWith('_');
+const sample = (from, to) => {
+  const out = [];
+  for (let d = from; d < to; d += 10) out.push(d);
+  return [...out, to];
+};
 
 export function render(root, ctx) {
   const { state } = ctx;
   const states = indicatorStates(state, ctx.weather.summary);
-  const charts = [];
-  const colors = { ink: css('--ink'), muted: css('--muted'), line: css('--line'), series: css('--series'), series2: css('--series-2'), ok: css('--ok'), act: css('--act'), watch: css('--watch') };
-  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const base = extra => ({
-    responsive: true, maintainAspectRatio: false, animation: calm ? false : { duration: 300 },
-    interaction: { mode: 'index', intersect: false },
-    plugins: {
-      legend: { labels: { color: colors.ink, boxWidth: 14, filter: item => !item.text.startsWith('_') } },
-      tooltip: { filter: item => !item.dataset.label.startsWith('_') },
-    },
-    ...extra,
-  });
-  const axis = (title, more = {}) => ({ title: { display: true, text: title, color: colors.muted }, ticks: { color: colors.muted }, grid: { color: colors.line }, ...more });
-  const flat = (label, y, n, color, dash = [6, 4]) => ({ label, data: Array(n).fill(y), borderColor: color, borderDash: dash, borderWidth: 1.5, pointRadius: 0, fill: false });
-  const bandPair = (green, n) => [
-    { label: '_low', data: Array(n).fill(green.min), borderWidth: 0, pointRadius: 0, fill: false },
-    { label: '_normal range', data: Array(n).fill(green.max), borderWidth: 0, pointRadius: 0, fill: '-1', backgroundColor: colors.ok + '26' },
-  ];
-  const draw = (canvas, config) => charts.push(new window.Chart(canvas, config));
-
-  const figure = (id, title, canvasLabel, caption) => {
-    const canvas = h('canvas', { role: 'img', 'aria-label': canvasLabel });
-    const fig = h('figure', { id: `chart-${id}`, class: 'chart' },
-      h('h3', null, title), h('div', { class: 'chart-box' }, canvas), h('figcaption', null, caption));
-    return { fig, canvas };
+  const boneNow = boneLossRange(state.day);
+  const metric = id => {
+    if (id === 'bone') return { id, label: 'Bone density loss', display: `${boneNow.minPct}–${boneNow.maxPct}%`, status: 'none', delta: null };
+    const ind = INDICATORS.find(i => i.id === id);
+    return { ...states[id], id, ind, label: ind.label };
   };
-  const captionFor = id => {
-    const s = states[id];
-    return [
-      h('span', null, `Latest: ${s.display} `), statusBadge(s.status),
-      s.delta !== null ? h('span', { class: 'muted' }, ` ${signed(s.delta)}`) : null,
-    ];
-  };
+  const ids = GROUPS.flatMap(g => g.ids);
+  const focus = ctx.params.get('focus');
+  const current = metric(ids.includes(focus) ? focus : ids[0]);
 
   const span = RANGES.find(r => r.id === range).days;
   const first = Math.max(1, state.day - span + 1);
-  const days = [];
-  for (let d = first; d <= state.day; d++) days.push(d);
-  const series = (key, id) => days.map(d => {
+  const days = Array.from({ length: state.day - first + 1 }, (_, i) => first + i);
+
+  const c = { ink: css('--ink'), muted: css('--muted'), line: css('--line'), raised: css('--raised'), series: css('--series'), series2: css('--series-2') };
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  const axis = (text, more) => ({ title: { display: true, text, color: c.muted }, ticks: { color: c.muted, maxTicksLimit: 8 }, border: { display: false }, grid: { color: c.line }, ...more });
+  const dayAxis = more => axis('Mission day', { grid: { display: false }, ...more });
+  const line = (label, data, color, more) => ({ label, data, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, cubicInterpolationMode: 'monotone', ...more });
+  const reference = (label, data, more) => line(label, data, c.muted, { borderWidth: 1.5, borderDash: [6, 4], pointHoverRadius: 0, ...more });
+  const band = (label, low, high, color) => [
+    { label: '_low', data: low, borderWidth: 0, pointRadius: 0, pointHoverRadius: 0 },
+    { label, data: high, borderWidth: 0, pointRadius: 0, pointHoverRadius: 0, fill: '-1', backgroundColor: color },
+  ];
+  const level = y => Array(days.length).fill(y);
+  const healthy = green => band('_healthy range', level(green.min), level(green.max), c.muted + '1F');
+  const values = (id, key) => days.map(d => {
     const v = valueOf(state.entries[d], id);
     return v === undefined ? null : key ? v[key] : v;
   });
+  // Charts on a numeric day axis give points as {x, y}; the rest plot one value per listed day.
+  const config = (type, data, scales, { linear = false, legend = false } = {}) => ({
+    type, data,
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: calm ? false : { duration: 300 },
+      interaction: linear ? { mode: 'nearest', axis: 'x', intersect: false } : { mode: 'index', intersect: false },
+      scales,
+      plugins: {
+        legend: { display: legend, align: 'end', labels: { color: c.ink, usePointStyle: true, pointStyle: 'line', filter: item => !unlisted(item.text) } },
+        tooltip: {
+          backgroundColor: c.raised, borderColor: c.line, borderWidth: 1, titleColor: c.ink, bodyColor: c.ink, padding: 10, boxPadding: 4, usePointStyle: true,
+          filter: item => !unlisted(item.dataset.label),
+          callbacks: { title: items => (items.length ? `Day ${linear ? items[0].parsed.x : items[0].label}` : '') },
+        },
+      },
+    },
+  });
 
-  const toggle = h('fieldset', { class: 'range' }, h('legend', null, 'Show'),
-    RANGES.map(r => h('label', { class: 'option' },
-      h('input', { type: 'radio', name: 'range', id: `range-${r.id}`, value: r.id, checked: range === r.id, onchange: () => { range = r.id; ctx.refresh(); } }),
-      r.label)));
-
-  const grid = h('div', { class: 'charts' });
-  root.append(h('h1', null, 'Trends'), toggle, grid);
-
-  for (const id of CHARTED) {
-    const ind = INDICATORS.find(i => i.id === id);
-    if (id === 'cabinCo2') grid.append(h('h2', { class: 'charts-heading' }, 'Cabin environment'));
-    const { fig, canvas } = figure(id, ind.label, `${ind.label} over mission days ${first} to ${state.day}`, captionFor(id));
-    grid.append(fig);
-    const line = (label, data, color) => ({ label, data, borderColor: color, backgroundColor: color, borderWidth: 2, pointRadius: days.length > 40 ? 0 : 2.5, spanGaps: false, stepped: id === 'mood', tension: 0 });
+  // What to draw for the chosen reading, and the one line that explains it.
+  const view = () => {
+    const { id, ind } = current;
+    if (id === 'vision') {
+      const reported = Object.keys(state.entries).map(Number).filter(d => valueOf(state.entries[d], 'vision') !== undefined).sort((a, b) => b - a).slice(0, 7);
+      return {
+        body: h('ul', { class: 'rows' }, reported.map(d => h('li', null, `Day ${d}`, h('span', null, ind.format(state.entries[d].vision))))),
+        note: 'Vision is a report of what you notice, so it is listed, not charted.',
+      };
+    }
+    if (id === 'exercise') {
+      return {
+        chart: config('bar', {
+          labels: days,
+          datasets: [
+            { label: 'Minutes', data: days.map(d => exerciseMinutes(state.tasksDone[d])), backgroundColor: c.series, borderRadius: 3, maxBarThickness: 16 },
+            { type: 'line', ...reference('NASA guidance', level(NASA.exerciseMinPerDay)) },
+          ],
+        }, { x: dayAxis(), y: axis('Minutes', { beginAtZero: true }) }),
+        note: `The dashed line is NASA's guidance of about ${NASA.exerciseMinPerDay} minutes a day.`,
+      };
+    }
+    if (id === 'bone') {
+      const points = sample(0, NASA.boneLossValidDays);
+      const at = key => points.map(d => ({ x: d, y: boneLossRange(d)[key] }));
+      return {
+        chart: config('line', {
+          datasets: [
+            ...band('NASA average range', at('minPct'), at('maxPct'), c.series + '40'),
+            line(`Today, day ${state.day}`, [{ x: state.day, y: boneNow.minPct }, { x: state.day, y: boneNow.maxPct }], c.ink, { pointRadius: 3.5 }),
+          ],
+        }, { x: dayAxis({ type: 'linear', min: 0, max: NASA.boneLossValidDays }), y: axis('Loss, % of bone mineral density', { beginAtZero: true }) }, { linear: true }),
+        note: `The band is NASA's average loss of ${NASA.boneLossPctPerMonth.min}–${NASA.boneLossPctPerMonth.max}% per month and the marker is today. It is not a measurement of you. In partial gravity the rate is not yet known.`,
+      };
+    }
+    if (id === 'radiation') {
+      const p = state.profile;
+      const dose = d => ({ x: d, y: radiation(p, d).cumulativeMsv });
+      return {
+        chart: config('line', {
+          datasets: [
+            line('Dose so far', sample(0, state.day).map(dose), c.series),
+            line('Projection', sample(state.day, p.stayDays).map(dose), c.series, { borderDash: [6, 4] }),
+            reference('NASA career limit', [{ x: 0, y: NASA.careerLimitMsv }, { x: p.stayDays, y: NASA.careerLimitMsv }], { borderDash: [2, 3] }),
+          ],
+        }, { x: dayAxis({ type: 'linear', min: 0, max: p.stayDays }), y: axis('mSv', { beginAtZero: true }) }, { linear: true }),
+        note: `Solid line: dose so far. Dashed: projection to day ${p.stayDays}, ${radiation(p, state.day).projectedMsv} mSv. Dotted: NASA's career limit of ${NASA.careerLimitMsv} mSv. NASA dose rate for this mission, simulated dosimeter.`,
+      };
+    }
+    const limits = LIMITS[id] ?? [];
     const datasets = id === 'bp'
-      ? [line('Systolic', series('sys', 'bp'), colors.series), line('Diastolic', series('dia', 'bp'), colors.series2), ...bandPair(ind.green.sys, days.length), ...bandPair(ind.green.dia, days.length)]
-      : [line(ind.label, series(null, id), colors.series), ...bandPair(ind.green, days.length), ...(LIMITS[id] ?? []).map(l => flat(l.label, l.y, days.length, colors.act))];
-    draw(canvas, {
-      type: 'line', data: { labels: days, datasets },
-      options: base({ scales: { x: axis('Mission day'), y: axis(ind.unit || 'Self-rating, 1 to 5', id === 'mood' ? { min: 1, max: 5, ticks: { color: colors.muted, stepSize: 1 } } : {}) } }),
-    });
-  }
+      ? [line('Systolic', values('bp', 'sys'), c.series), line('Diastolic', values('bp', 'dia'), c.series2), ...healthy(ind.green.sys), ...healthy(ind.green.dia)]
+      : [line(ind.label, values(id), c.series, { stepped: id === 'mood' }), ...healthy(ind.green), ...limits.map(l => reference(l.label, level(l.y)))];
+    return {
+      chart: config('line', { labels: days, datasets }, {
+        x: dayAxis(),
+        y: axis(ind.unit || 'Self-rating, 1 to 5', id === 'mood' ? { min: 1, max: 5, ticks: { color: c.muted, stepSize: 1 } } : {}),
+      }, { legend: id === 'bp' }),
+      note: id === 'bp' ? 'The shaded bands are the healthy ranges for each number.'
+        : `The shaded band is the healthy range.${limits.length ? ' The dashed line is NASA\'s limit for the cabin.' : ''}`,
+    };
+  };
+  const { chart, body, note } = view();
 
-  // Vision is a symptom report, so it is listed, not charted.
-  const visionInd = INDICATORS.find(i => i.id === 'vision');
-  const visionDays = days.filter(d => valueOf(state.entries[d], 'vision') !== undefined).slice(-3).reverse();
-  grid.append(h('figure', { id: 'chart-vision', class: 'chart' },
-    h('h3', null, 'Vision'),
-    h('ul', null, visionDays.map(d => h('li', null, `Day ${d}: ${visionInd.format(state.entries[d].vision)}`))),
-    h('figcaption', null, captionFor('vision'))));
+  const canvas = chart ? h('canvas', { role: 'img', 'aria-label': `${current.label} by mission day` }) : null;
+  const nav = h('nav', { class: 'metrics', 'aria-label': 'Readings' },
+    GROUPS.flatMap(g => [
+      h('h2', null, g.title),
+      h('ul', null, g.ids.map(metric).map(m => h('li', null,
+        h('a', { id: `metric-${m.id}`, href: `#/trends?focus=${m.id}`, 'aria-current': m.id === current.id ? 'true' : null },
+          h('span', null, m.label),
+          flagged(m.status) ? statusLabel(m.status) : null,
+          h('span', { class: 'metric-value' }, m.display))))),
+    ]));
+  root.append(
+    h('h1', null, 'Trends'),
+    h('div', { class: 'trends' },
+      nav,
+      h('section', { class: 'panel', 'aria-label': current.label },
+        h('header', { class: 'chart-head' },
+          h('div', null,
+            h('h2', null, current.label),
+            h('p', { class: 'chart-reading' }, reading(current.display, current.ind?.unit), current.ind ? statusLabel(current.status) : null),
+            h('p', { class: 'muted small' }, current.ind ? (current.delta !== null ? versusAverage(current.delta) : null) : `Estimated for day ${state.day}`)),
+          FIXED_SPAN.includes(current.id) ? null : h('fieldset', { class: 'segmented', 'aria-label': 'Time range' },
+            RANGES.map(r => h('label', null,
+              h('input', { type: 'radio', name: 'range', id: `range-${r.id}`, value: r.id, checked: range === r.id, onchange: () => { range = r.id; ctx.refresh(); } }),
+              r.label)))),
+        canvas ? h('div', { class: 'chart-box' }, canvas) : body,
+        h('p', { class: 'chart-note muted small' }, note))));
 
-  // Exercise
-  {
-    const { fig, canvas } = figure('exercise', 'Exercise minutes per day', 'Exercise minutes per day', captionFor('exercise'));
-    grid.append(h('h2', { class: 'charts-heading' }, 'Bone, muscle and radiation'), fig);
-    draw(canvas, {
-      type: 'bar',
-      data: {
-        labels: days,
-        datasets: [
-          { type: 'bar', label: 'Minutes', data: days.map(d => exerciseMinutes(state.tasksDone[d])), backgroundColor: colors.series },
-          { type: 'line', ...flat(`NASA: about ${NASA.exerciseMinPerDay} minutes a day`, NASA.exerciseMinPerDay, days.length, colors.ok) },
-        ],
-      },
-      options: base({ scales: { x: axis('Mission day'), y: axis('Minutes', { beginAtZero: true }) } }),
-    });
-  }
+  // On a narrow screen the list is one scrolling row; keep the chosen reading in view.
+  const here = document.getElementById(`metric-${current.id}`);
+  nav.scrollLeft = here.offsetLeft - nav.offsetLeft - (nav.clientWidth - here.offsetWidth) / 2;
 
-  // Bone-loss estimate: drawn only as far as NASA's data reaches.
-  {
-    const points = [];
-    for (let d = 0; d <= NASA.boneLossValidDays; d += 10) points.push(d);
-    const today = boneLossRange(state.day);
-    const { fig, canvas } = figure('bone', 'Estimated bone density loss', 'Estimated bone density loss band from day 0 to day 180',
-      [h('span', null, `Day ${state.day}: ${today.minPct}–${today.maxPct}% estimated. `),
-        h('span', { class: 'muted' }, `NASA's average of ${NASA.boneLossPctPerMonth.min}–${NASA.boneLossPctPerMonth.max}% per month, not a measurement of you. In partial gravity the rate is not yet known.`)]);
-    grid.append(fig);
-    draw(canvas, {
-      type: 'line',
-      data: {
-        datasets: [
-          { label: 'Lower estimate', data: points.map(d => ({ x: d, y: boneLossRange(d).minPct })), borderColor: colors.series, borderWidth: 1.5, pointRadius: 0, fill: false },
-          { label: 'Upper estimate', data: points.map(d => ({ x: d, y: boneLossRange(d).maxPct })), borderColor: colors.series, borderWidth: 1.5, pointRadius: 0, fill: '-1', backgroundColor: colors.series + '33' },
-          { label: `Today (day ${state.day})`, data: [{ x: state.day, y: today.minPct }, { x: state.day, y: today.maxPct }], borderColor: colors.watch, backgroundColor: colors.watch, borderWidth: 3, pointRadius: 4 },
-        ],
-      },
-      options: base({ scales: { x: axis('Mission day', { type: 'linear', min: 0, max: NASA.boneLossValidDays }), y: axis('Loss, % of bone mineral density', { beginAtZero: true }) } }),
-    });
-  }
-
-  // Radiation: measured to today, projected to the end of the stay, against NASA's career limit.
-  {
-    const p = state.profile;
-    const now = radiation(p, state.day);
-    const dose = d => radiation(p, d).cumulativeMsv;
-    const { fig, canvas } = figure('radiation', 'Cumulative radiation dose', `Cumulative radiation dose against the ${NASA.careerLimitMsv} mSv career limit`,
-      [h('span', null, `Day ${state.day}: ${now.cumulativeMsv} of ${NASA.careerLimitMsv} mSv (${now.pctOfLimit}%). Projected at day ${p.stayDays}: ${now.projectedMsv} mSv. `),
-        statusBadge(states.radiation.status),
-        h('span', { class: 'muted' }, ' NASA dose rate for this mission, simulated dosimeter.')]);
-    grid.append(fig);
-    draw(canvas, {
-      type: 'line',
-      data: {
-        datasets: [
-          { label: 'Dose so far', data: [{ x: 0, y: dose(0) }, { x: state.day, y: dose(state.day) }], borderColor: colors.series, backgroundColor: colors.series, borderWidth: 2.5, pointRadius: 3 },
-          { label: 'Projection', data: [{ x: state.day, y: dose(state.day) }, { x: p.stayDays, y: dose(p.stayDays) }], borderColor: colors.series, borderDash: [6, 4], borderWidth: 2, pointRadius: 0 },
-          { label: `NASA career limit ${NASA.careerLimitMsv} mSv`, data: [{ x: 0, y: NASA.careerLimitMsv }, { x: p.stayDays, y: NASA.careerLimitMsv }], borderColor: colors.act, borderWidth: 1.5, pointRadius: 0 },
-        ],
-      },
-      options: base({ scales: { x: axis('Mission day', { type: 'linear', min: 0, max: p.stayDays }), y: axis('mSv', { beginAtZero: true }) } }),
-    });
-  }
-
-  const focus = ctx.params.get('focus');
-  if (focus) document.getElementById(`chart-${focus}`)?.scrollIntoView({ block: 'center' });
-
-  return () => charts.forEach(chart => chart.destroy());
+  const drawn = chart ? new window.Chart(canvas, chart) : null;
+  return () => drawn?.destroy();
 }

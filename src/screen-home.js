@@ -1,12 +1,12 @@
 import { INDICATORS, REGIONS, STATUS_LABEL } from './indicators.js';
-import { TASKS } from './nasa-data.js';
 import { regionStatuses, indicatorStates, buildAlerts, needsAttention, ESCALATION_LABEL } from './alerts.js';
 import { flaggedRun, escalation } from './rules.js';
-import { boneLossRange, reminders } from './projections.js';
-import { h, svg, statusBadge, signed } from './ui.js';
+import { boneLossRange } from './projections.js';
+import { h, svg, statusLabel, reading, versusAverage } from './ui.js';
 
-const RANK = { red: 3, amber: 2, green: 1, none: 0 };
 let selected = null;
+// True for the one render in which the detail sheet should slide in.
+let entering = false;
 let symptomError = null;
 let symptomOpen = false;
 
@@ -31,17 +31,16 @@ const SHAPES = {
   eyes: () => [svg('ellipse', { cx: 140, cy: 50, rx: 5.5, ry: 3.2 }), svg('ellipse', { cx: 160, cy: 50, rx: 5.5, ry: 3.2 })],
 };
 const DRAW_ORDER = ['cabin', 'bones', 'body', 'head', 'gut', 'heart', 'eyes'];
-const KIND = { cabin: 'cabin', bones: 'part', body: 'part', head: 'part', gut: 'organ', heart: 'organ', eyes: 'organ' };
 
-// Where each label's leader line touches the figure, and the height its label sits at.
+// Where each label's leader line touches the figure, which side the label sits on, and at what height.
 const CALLOUTS = {
-  head: { at: [124, 40], y: 40 },
-  eyes: { at: [134, 51], y: 104 },
-  heart: { at: [158, 148], y: 168 },
-  body: { at: [108, 214], y: 232 },
-  gut: { at: [127, 262], y: 296 },
-  bones: { at: [95, 400], y: 400 },
-  cabin: { at: [8, 520], y: 520 },
+  head: { at: [126, 40], side: 'left', y: 40 },
+  eyes: { at: [166, 50], side: 'right', y: 62 },
+  heart: { at: [178, 146], side: 'right', y: 170 },
+  body: { at: [108, 214], side: 'left', y: 214 },
+  gut: { at: [172, 266], side: 'right', y: 290 },
+  bones: { at: [56, 300], side: 'left', y: 350 },
+  cabin: { at: [8, 540], side: 'left', y: 540 },
 };
 const VIEW = { x: -70, width: 440, height: 640 };
 
@@ -62,11 +61,13 @@ const defs = () => svg('defs', null,
     svg('stop', { offset: 1, 'stop-color': '#DCEBFF', 'stop-opacity': 0.55 })),
   svg('clipPath', { id: 'body-clip' }, silhouette()));
 
-function leader(id, status) {
-  const { at: [x, y], y: labelY } = CALLOUTS[id];
-  const elbowX = x - Math.abs(labelY - y);
-  return svg('g', { class: 'leader', 'data-status': status, 'aria-hidden': 'true' },
-    svg('polyline', { points: `${x},${y} ${elbowX},${labelY} ${VIEW.x},${labelY}` }),
+function leader(id, isSelected) {
+  const { at: [x, y], side, y: labelY } = CALLOUTS[id];
+  const toLeft = side === 'left';
+  const elbowX = x + (toLeft ? -1 : 1) * Math.abs(labelY - y);
+  const edgeX = toLeft ? VIEW.x : VIEW.x + VIEW.width;
+  return svg('g', { class: 'leader', 'data-selected': isSelected, 'aria-hidden': 'true' },
+    svg('polyline', { points: `${x},${y} ${elbowX},${labelY} ${edgeX},${labelY}` }),
     svg('circle', { cx: x, cy: y, r: 2.6 }));
 }
 
@@ -74,32 +75,27 @@ export function render(root, ctx) {
   const { state } = ctx;
   const weather = ctx.weather.summary;
   const regions = regionStatuses(state, weather);
-  const states = indicatorStates(state, weather);
-  const alerts = buildAlerts(state, weather);
-  const count = needsAttention(alerts);
+  const count = needsAttention(buildAlerts(state, weather));
+  if (selected && !regions[selected]) selected = null;
+  const slideIn = entering;
+  entering = false;
 
-  if (!selected || !regions[selected]) {
-    selected = REGIONS.reduce((best, r) => (RANK[regions[r.id].status] > RANK[regions[best].status] ? r.id : best), REGIONS[0].id);
-  }
-  const select = id => { selected = id; symptomError = null; symptomOpen = false; ctx.refresh(); };
+  // Choosing the open region again closes the sheet.
+  const select = id => {
+    selected = selected === id ? null : id;
+    entering = selected !== null;
+    symptomError = null;
+    symptomOpen = false;
+    ctx.refresh();
+    document.getElementById(selected ? 'sheet-title' : `region-${id}`)?.focus();
+  };
   const label = id => REGIONS.find(r => r.id === id).label;
-
-  const now = new Date();
-  const due = reminders(state.tasksDone[state.day], now.getHours() * 60 + now.getMinutes());
-  const nextTask = TASKS.find(t => t.id === due.next);
-  const strip = h('section', { class: 'strip', 'aria-label': 'Today' },
-    h('p', { class: 'strip-count' }, h('strong', null, String(count)), count === 1 ? ' needs attention' : ' need attention'),
-    alerts[0] && alerts[0].status !== 'info' ? h('p', null, h('a', { href: '#/alerts' }, alerts[0].title)) : null,
-    state.hasCheckedInToday ? null : h('a', { class: 'button', href: '#/checkin' }, 'Start today\'s check-in'),
-    h('p', { class: 'strip-next muted' },
-      nextTask ? `Next: ${nextTask.label} at ${nextTask.time}` : 'All of today\'s tasks are done or past.',
-      due.overdue.length ? h('span', null, ', ', h('a', { href: '#/routine' }, `${due.overdue.length} overdue`)) : null));
 
   const figure = svg('svg', { viewBox: `${VIEW.x} 0 ${VIEW.width} ${VIEW.height}`, class: 'figure', role: 'group', 'aria-label': 'Body map' },
     defs(),
-    REGIONS.map(r => leader(r.id, regions[r.id].status)),
+    REGIONS.map(r => leader(r.id, selected === r.id)),
     DRAW_ORDER.map(id => svg('g', {
-      id: `figure-${id}`, class: `region ${KIND[id]}`, 'data-region': id, 'data-status': regions[id].status,
+      id: `figure-${id}`, class: 'region', 'data-region': id,
       role: 'button', tabindex: '0', 'aria-pressed': String(selected === id),
       'aria-label': `${label(id)}: ${STATUS_LABEL[regions[id].status]}`,
       onclick: () => select(id),
@@ -107,40 +103,51 @@ export function render(root, ctx) {
     }, SHAPES[id]())),
     svg('g', { class: 'rim', 'aria-hidden': 'true' }, silhouette()),
     svg('g', { class: 'scan', 'clip-path': 'url(#body-clip)', 'aria-hidden': 'true' },
-      svg('rect', { x: 0, y: -70, width: 300, height: 70, fill: 'url(#scan-fade)' })),
-    selected === 'cabin' ? null : svg('g', { class: 'selected-outline', 'aria-hidden': 'true' }, SHAPES[selected]()));
+      svg('rect', { x: 0, y: -70, width: 300, height: 70, fill: 'url(#scan-fade)', style: `--t: ${(performance.now() / 1000).toFixed(2)}` })),
+    selected && selected !== 'cabin' ? svg('g', { class: 'selected-outline', 'aria-hidden': 'true' }, SHAPES[selected]()) : null);
 
   const callouts = h('ul', { class: 'callouts' },
-    REGIONS.map(r => h('li', { style: `top: ${CALLOUTS[r.id].y / VIEW.height * 100}%` },
-      h('button', { type: 'button', id: `region-${r.id}`, class: 'region-button', 'aria-pressed': String(selected === r.id), onclick: () => select(r.id) },
-        h('span', null, r.label), statusBadge(regions[r.id].status)))));
+    REGIONS.map(r => h('li', { 'data-side': CALLOUTS[r.id].side, style: `--y: ${CALLOUTS[r.id].y / VIEW.height * 100}%` },
+      h('button', { type: 'button', id: `region-${r.id}`, class: 'callout', 'aria-pressed': String(selected === r.id), onclick: () => select(r.id) },
+        h('span', { class: 'callout-name' }, r.label), statusLabel(regions[r.id].status)))));
 
   root.append(
-    h('h1', { class: 'visually-hidden' }, 'Body map'),
-    strip,
-    h('div', { class: 'home' },
-      callouts,
-      h('div', { class: 'home-figure' }, figure),
-      detailPanel(ctx, REGIONS.find(r => r.id === selected), regions[selected], states)));
+    h('header', { class: 'home-head' },
+      h('h1', null, count === 0 ? 'All readings are in range' : `${count} ${count === 1 ? 'thing needs' : 'things need'} your attention`),
+      h('p', { class: 'home-actions' },
+        state.hasCheckedInToday ? null : h('a', { class: 'button', href: '#/checkin' }, 'Start today\'s check-in'),
+        count ? h('a', { href: '#/alerts' }, 'Review alerts') : null)),
+    h('div', { class: 'home' }, h('div', { class: 'home-figure' }, figure), callouts),
+    h('p', { class: 'hint muted' }, 'Select a part of the body to see its readings.'));
+
+  if (selected) {
+    root.append(sheet(ctx, REGIONS.find(r => r.id === selected), regions[selected], indicatorStates(state, weather), () => select(selected), slideIn));
+  }
+
+  const onKey = e => { if (e.key === 'Escape' && selected) select(selected); };
+  document.addEventListener('keydown', onKey);
+  return () => document.removeEventListener('keydown', onKey);
 }
 
-function detailPanel(ctx, region, regionState, states) {
+function sheet(ctx, region, regionState, states, close, slideIn) {
   const { state } = ctx;
-  const panel = h('section', { class: 'panel', 'aria-live': 'polite' },
-    h('h2', null, region.label, ' ', statusBadge(regionState.status)));
+  const el = h('aside', { class: slideIn ? 'sheet sheet-enter' : 'sheet', 'aria-labelledby': 'sheet-title' },
+    h('header', { class: 'sheet-head' },
+      h('h2', { id: 'sheet-title', tabindex: '-1' }, region.label),
+      h('button', { type: 'button', id: 'sheet-close', class: 'icon-button', 'aria-label': 'Close', onclick: close }, '×')));
 
   for (const id of region.indicatorIds) {
     const ind = INDICATORS.find(i => i.id === id);
     const s = states[id];
     const flagged = s.status === 'amber' || s.status === 'red';
     const level = flagged ? escalation(s.status, ind.derived ? 1 : flaggedRun(state.entries, id, state.day)) : 'none';
-    panel.append(h('article', { class: 'reading' },
-      h('h3', null, ind.label),
-      h('p', { class: 'reading-value' },
-        h('span', { class: 'value' }, s.display), ' ', statusBadge(s.status),
-        s.delta !== null ? h('span', { class: 'muted' }, signed(s.delta)) : null),
-      flagged ? h('div', { class: 'action', 'data-status': s.status },
-        h('ol', null, ind.actions[s.status].map(a => h('li', null, a))),
+    el.append(h('article', { class: 'reading' },
+      h('div', { class: 'reading-top' }, h('h3', null, ind.label), statusLabel(s.status)),
+      h('p', { class: 'reading-value' }, reading(s.display, ind.unit)),
+      s.delta !== null ? h('p', { class: 'muted small' }, versusAverage(s.delta)) : null,
+      flagged ? h('div', { class: 'todo' },
+        h('h4', null, 'What to do'),
+        h('ol', { class: 'steps' }, ind.actions[s.status].map(a => h('li', null, a))),
         h('p', { class: 'escalation' }, ESCALATION_LABEL[level])) : null,
       h('details', null,
         h('summary', null, 'About this reading'),
@@ -150,11 +157,11 @@ function detailPanel(ctx, region, regionState, states) {
         h('ol', null, ind.howTo.map(step => h('li', null, step))),
         ind.appRuleNote ? h('p', { class: 'muted' }, ind.appRuleNote) : null,
         s.day && s.day !== state.day && !ind.derived ? h('p', { class: 'muted' }, `Recorded on day ${s.day}.`) : null,
-        id === 'radiation' ? null : h('p', null, h('a', { href: `#/trends?focus=${id}` }, 'See trend')))));
+        h('p', null, h('a', { href: `#/trends?focus=${id}` }, 'See trend')))));
   }
 
-  if (region.bodyPart) panel.append(symptomBlock(ctx, region, regionState));
-  return panel;
+  if (region.bodyPart) el.append(symptomBlock(ctx, region, regionState));
+  return el;
 }
 
 function boneLine(day) {
@@ -165,7 +172,7 @@ function boneLine(day) {
 function symptomBlock(ctx, region, regionState) {
   const { state, store } = ctx;
   const textId = `symptom-text-${region.id}`;
-  const text = h('input', { id: textId, type: 'text', maxlength: '200', autocomplete: 'off', 'aria-describedby': 'symptom-error' });
+  const text = h('input', { id: textId, type: 'text', maxlength: '200', autocomplete: 'off', placeholder: 'Describe it', 'aria-describedby': 'symptom-error' });
   const severity = h('select', { id: `symptom-severity-${region.id}` },
     ['mild', 'moderate', 'severe'].map(v => h('option', { value: v }, v[0].toUpperCase() + v.slice(1))));
   const submit = e => {
@@ -177,12 +184,12 @@ function symptomBlock(ctx, region, regionState) {
   return h('section', { class: 'symptoms' },
     regionState.symptoms.length
       ? h('ul', null, regionState.symptoms.map(s => h('li', null,
-        h('span', null, s.text), ' ', h('span', { class: 'muted' }, `(${s.severity})`), ' ',
+        h('span', null, s.text, ' ', h('span', { class: 'muted' }, `(${s.severity})`)),
         h('button', { type: 'button', class: 'quiet', onclick: () => { store.removeSymptom(state.symptoms.indexOf(s)); ctx.refresh(); document.getElementById(textId)?.focus(); } }, 'Remove'))))
       : null,
     // Re-rendering must not close a form the crew member has opened.
     h('details', { open: symptomOpen || regionState.symptoms.length > 0, ontoggle: e => { symptomOpen = e.target.open; } },
-      h('summary', null, 'Report a symptom here'),
+      h('summary', null, 'Report a symptom'),
       h('form', { class: 'symptom-form', onsubmit: submit },
         h('label', { class: 'visually-hidden', for: textId }, 'Symptom or discomfort'),
         h('div', { class: 'row' }, text,

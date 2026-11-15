@@ -1,6 +1,6 @@
 import { INDICATORS, CHECKIN_STEPS } from './indicators.js';
 import { classify, valueOf } from './rules.js';
-import { h, statusBadge } from './ui.js';
+import { h, statusLabel } from './ui.js';
 
 const byId = id => INDICATORS.find(i => i.id === id);
 const STEPS = [...CHECKIN_STEPS.map(ids => ({ kind: 'reading', ids })), { kind: 'journal' }, { kind: 'review' }];
@@ -83,7 +83,7 @@ function readingStep(current, ctx) {
     const badgeSlot = h('span', { class: 'live-badge' });
     const showBadge = () => {
       const status = draftStatus(ind.id);
-      badgeSlot.replaceChildren(...(status === 'none' ? [] : [statusBadge(status)]));
+      badgeSlot.replaceChildren(...(status === 'none' ? [] : [statusLabel(status)]));
     };
     const set = (key, value) => { draft[key] = value; showBadge(); };
 
@@ -138,7 +138,7 @@ function reviewStep() {
     const status = draftStatus(ind.id);
     const value = ind.id === 'vision' ? draft.vision : valueOf(Object.fromEntries(Object.entries(draft).map(([k, v]) => [k, v === '' ? undefined : v])), ind.id);
     const text = status === 'none' ? 'Skipped' : ind.format(value);
-    return h('tr', null, h('th', { scope: 'row' }, ind.label), h('td', null, text), h('td', null, status === 'none' ? '' : statusBadge(status)));
+    return h('tr', null, h('th', { scope: 'row' }, ind.label), h('td', null, text), h('td', null, status === 'none' ? '' : statusLabel(status)));
   });
   return h('div', null,
     h('h2', { id: 'step-title', tabindex: '-1' }, 'Review'),
