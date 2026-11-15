@@ -87,7 +87,7 @@ export function buildAlerts(state, weather) {
     const s = states[ind.id];
     const when = ind.derived ? '' : s.day === state.day ? ', recorded today' : `, recorded on day ${s.day}`;
     add({
-      id: ind.id, kind: 'indicator', status, title: `${ind.label}: ${STATUS_LABEL[status]}`,
+      id: ind.id, kind: 'indicator', status, title: ind.label,
       detail: `${s.display}${when}`, actions: ind.actions[status],
       escalation: escalation(status, ind.derived ? 1 : flaggedRun(state.entries, ind.id, state.day)),
       source: ind.source,
@@ -114,7 +114,7 @@ export function buildReport(state, alerts) {
   const open = alerts.filter(a => flagged(a.status));
   if (open.length === 0) lines.push('Nothing flagged today.');
   for (const a of open) {
-    lines.push(`- ${a.title}`, `  ${a.detail}`);
+    lines.push(`- ${a.title} (${STATUS_LABEL[a.status]})`, `  ${a.detail}`);
     if (ESCALATION_LABEL[a.escalation]) lines.push(`  ${ESCALATION_LABEL[a.escalation]}`);
   }
   lines.push('', 'LATEST READINGS');

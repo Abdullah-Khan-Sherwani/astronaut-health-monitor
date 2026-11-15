@@ -59,7 +59,8 @@ test('report is plain text with no holes', () => {
   assert.match(report, /Mission day 120/);
   assert.match(report, /ISS/);
   assert.match(report, /SIMULATED DATA/);
-  for (const a of alerts.filter(a => a.status !== 'info')) assert.ok(report.includes(a.title), a.id);
+  for (const a of alerts.filter(a => a.status !== 'info')) assert.ok(report.includes(`- ${a.title} (${a.status === 'red' ? 'Act now' : 'Watch'})`), a.id);
+  assert.ok(alerts.every(a => !/Watch|Act now/.test(a.title)), 'titles leave the status word to the screen');
   assert.doesNotMatch(report, /undefined|null|NaN|\[object/);
 });
 
