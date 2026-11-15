@@ -152,14 +152,20 @@ temperature 0.0–50.0, journal up to 2000 characters. A symptom needs a known b
 
 ### 5.5 Space weather (NASA DONKI)
 
-- Endpoints: `https://api.nasa.gov/DONKI/SEP` and `https://api.nasa.gov/DONKI/FLR` with
-  `startDate`, `endDate` (last 30 days) and `api_key`. The API allows browser calls from any
-  origin (`access-control-allow-origin: *`, measured 2026-11-15).
-- The field names (`eventTime`, `classType`, `peakTime`, `link`) are from NASA's documentation and
-  were not confirmed against a live response because the demo key was rate-limited. The first
-  step of the space-weather task confirms them.
+- Endpoints: `https://api.nasa.gov/DONKI/SEP` (solar energetic particle events) and
+  `https://api.nasa.gov/DONKI/CME` (coronal mass ejections) with `startDate`, `endDate` (last 30
+  days in the browser, 60 days in the saved snapshot, the API's maximum range) and `api_key`. The
+  API allows browser calls from any origin (`access-control-allow-origin: *`, measured 2026-11-15).
+- The `FLR` (solar flare) endpoint returned HTTP 404 on 2026-11-15, so flares are not used and
+  there is no flare rule.
+- CME field names (`startTime`, `link`) were confirmed against a live response. The SEP list was
+  empty for the window fetched, so its field names (`eventTime`, `link`) are from NASA's
+  documentation only; a malformed item is skipped, never shown.
 - App rule: red if a solar particle event started within 48 hours; amber if one started within
-  7 days or an X-class flare peaked within 48 hours; otherwise green.
+  7 days; otherwise green. Coronal mass ejections are listed for information and never change
+  the status.
+- The browser uses NASA's public `DEMO_KEY` with a 6-hour cache, then falls back to the saved
+  snapshot. The team's own key is read only by `fetch-space-weather.mjs` from `.env`.
 - The UI states that DONKI reports events observed from near Earth, and that a real vehicle would
   use its own dosimeters.
 
