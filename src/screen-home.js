@@ -57,7 +57,7 @@ export function render(root, ctx) {
   // Figure
   const figure = svg('svg', { viewBox: '0 0 200 440', class: 'figure', role: 'group', 'aria-label': 'Body map' },
     DRAW_ORDER.map(id => svg('g', {
-      class: 'region', 'data-region': id, 'data-status': regions[id].status,
+      id: `figure-${id}`, class: 'region', 'data-region': id, 'data-status': regions[id].status,
       role: 'button', tabindex: '0', 'aria-pressed': String(selected === id),
       'aria-label': `${label(id)}: ${STATUS_LABEL[regions[id].status]}`,
       onclick: () => select(id),
@@ -134,13 +134,13 @@ function symptomBlock(ctx, region, regionState) {
     regionState.symptoms.length
       ? h('ul', null, regionState.symptoms.map(s => h('li', null,
         h('span', null, s.text), ' ', h('span', { class: 'muted' }, `(${s.severity})`), ' ',
-        h('button', { type: 'button', class: 'quiet', onclick: () => { store.removeSymptom(state.symptoms.indexOf(s)); ctx.refresh(); } }, 'Remove'))))
+        h('button', { type: 'button', class: 'quiet', onclick: () => { store.removeSymptom(state.symptoms.indexOf(s)); ctx.refresh(); document.getElementById(textId)?.focus(); } }, 'Remove'))))
       : h('p', { class: 'muted' }, 'None.'),
     h('form', { class: 'symptom-form', onsubmit: submit },
       h('label', { for: textId }, 'Report a symptom or discomfort here'),
       h('div', { class: 'row' }, text,
         h('label', { class: 'visually-hidden', for: severity.id }, 'Severity'), severity,
-        h('button', { type: 'submit' }, 'Add')),
+        h('button', { type: 'submit', id: `symptom-add-${region.id}` }, 'Add')),
       h('p', { id: 'symptom-error', class: 'error' }, symptomError ?? ''),
       h('p', { class: 'muted' }, 'Mild and moderate show as Watch, severe as Act now. Severity colours are this app\'s own rule.')));
 }
