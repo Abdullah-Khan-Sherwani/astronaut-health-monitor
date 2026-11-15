@@ -52,8 +52,9 @@ its source under [Sources](#sources) at the bottom of this page.
 ## Use of AI
 
 The idea, the scope and the decisions are the team's. The code and documents were written with
-AI assistance (Claude, by Anthropic) and reviewed by the team. No AI-generated images, video or
-audio are used, and the app itself does not call any AI model.
+AI assistance (Claude, by Anthropic) and reviewed by the team. The presentation was prepared with
+OpenAI Codex assistance and combines actual app screenshots with AI-generated space illustrations.
+The app itself uses no AI-generated imagery and does not call any AI model.
 
 ## Credits
 
@@ -65,6 +66,7 @@ audio are used, and the app itself does not call any AI model.
 - Design: `docs/superpowers/specs/2026-11-15-astronaut-health-monitor-design.md`
 - Build plan: `docs/superpowers/plans/2026-11-15-astronaut-health-monitor.md`
 - Submission text, slide outline and judge questions: `docs/submission.md`
+- Presentation: [SpaceEX visual deck](SpaceEX-Astronaut-Health-Monitor-Visual.pptx), with all pictures embedded.
 
 ## Sources
 

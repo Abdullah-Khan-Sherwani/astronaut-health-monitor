@@ -1,16 +1,16 @@
 # Submission pack
 
 Drafts for the Space Apps project page, the seven slides and the judges' questions. Everything is
-in English. Fill in the two fields marked **TEAM TO FILL**.
+in English. The finished slides are in `SpaceEX-Astronaut-Health-Monitor-Visual.pptx`, with all pictures embedded.
 
 Local judging: 15 November, 16:00–18:00 PKT, seven minutes to present and three for questions.
 Submission closes 15 November at 23:59.
 
 ## Form fields
 
-**Team name:** TEAM TO FILL
+**Team name:** SpaceEX
 
-**Team members:** TEAM TO FILL
+**Team members:** Saad Inam, Abdullah Khan Sherwani
 
 **Project name:** Astronaut Health Monitor
 
@@ -102,8 +102,10 @@ medical officer across the whole crew.
 **Use of artificial intelligence**
 
 The idea, scope and decisions are the team's. The code and the written documents were produced
-with AI assistance (Claude, by Anthropic) and reviewed by the team. No AI-generated images, video
-or audio are used. The app does not call an AI model. No NASA logos or branding are used.
+with AI assistance (Claude, by Anthropic) and reviewed by the team. The presentation was prepared
+with OpenAI Codex assistance, using actual app screenshots and AI-generated space illustrations.
+The app itself uses no AI-generated imagery and does not call an AI model. No NASA logos or
+branding are used.
 
 ## Seven slides
 
