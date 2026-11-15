@@ -38,6 +38,7 @@ const profileSelect = document.getElementById('profile');
 let weatherData = null;
 let weatherSource = 'none';
 let cleanup = null;
+let shownPath = null;
 
 function route() {
   const [path, query] = location.hash.replace(/^#\/?/, '').split('?');
@@ -58,6 +59,7 @@ function render({ moveFocus = false } = {}) {
   cleanup?.();
   root.replaceChildren();
   cleanup = SCREENS[path].render(root, ctx) ?? null;
+  shownPath = path;
 
   profileSelect.value = state.profileId;
   const delay = state.profile.delaySecOneWay;
@@ -88,7 +90,8 @@ window.addEventListener('online', showConnection);
 window.addEventListener('offline', showConnection);
 showConnection();
 
-window.addEventListener('hashchange', () => render({ moveFocus: true }));
+// Choosing another option within a screen changes only the query, so focus stays where it is.
+window.addEventListener('hashchange', () => render({ moveFocus: route().path !== shownPath }));
 render();
 
 // Pass an arrow function: a detached `fetch` throws "Illegal invocation".
