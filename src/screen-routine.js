@@ -1,7 +1,7 @@
-import { TASKS, SOURCES, NASA } from './nasa-data.js';
+import { TASKS, NASA } from './nasa-data.js';
 import { streak, weeklyCompletion } from './store.js';
 import { exerciseMinutes, reminders } from './projections.js';
-import { h, svg, sourceLink } from './ui.js';
+import { h, svg } from './ui.js';
 
 const RING_RADIUS = 52;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
@@ -26,9 +26,7 @@ export function render(root, ctx) {
         h('label', { for: id }, t.label,
           due.overdue.includes(t.id) ? h('span', { class: 'mark mark-overdue' }, 'Overdue') : null,
           due.next === t.id ? h('span', { class: 'mark mark-next' }, 'Next') : null),
-        h('p', null, t.why),
-        t.auto ? h('p', null, h('a', { href: '#/checkin' }, 'Done in the check-in')) : null,
-        h('p', { class: 'meta' }, sourceLink(SOURCES[t.source]))));
+        h('p', { class: 'muted' }, t.why, t.auto ? [' ', h('a', { href: '#/checkin' }, 'Done in the check-in')] : null)));
   };
 
   root.append(

@@ -1,9 +1,9 @@
 import { INDICATORS } from './indicators.js';
-import { NASA, SOURCES } from './nasa-data.js';
+import { NASA } from './nasa-data.js';
 import { indicatorStates } from './alerts.js';
 import { valueOf } from './rules.js';
 import { boneLossRange, radiation, exerciseMinutes } from './projections.js';
-import { h, statusBadge, sourceLink, signed } from './ui.js';
+import { h, statusBadge, signed } from './ui.js';
 
 const RANGES = [{ id: '7', label: '7 days', days: 7 }, { id: '30', label: '30 days', days: 30 }, { id: 'all', label: 'All', days: Infinity }];
 const CHARTED = ['bp', 'hr', 'glucose', 'temp', 'sleep', 'mood', 'cabinCo2', 'cabinTemp'];
@@ -43,13 +43,10 @@ export function render(root, ctx) {
     return { fig, canvas };
   };
   const captionFor = id => {
-    const ind = INDICATORS.find(i => i.id === id);
     const s = states[id];
     return [
       h('span', null, `Latest: ${s.display} `), statusBadge(s.status),
       s.delta !== null ? h('span', { class: 'muted' }, ` ${signed(s.delta)}`) : null,
-      ' ', sourceLink(ind.source),
-      ind.appRuleNote ? h('span', { class: 'muted' }, ` ${ind.appRuleNote}`) : null,
     ];
   };
 
@@ -117,8 +114,7 @@ export function render(root, ctx) {
     const today = boneLossRange(state.day);
     const { fig, canvas } = figure('bone', 'Estimated bone density loss', 'Estimated bone density loss band from day 0 to day 180',
       [h('span', null, `Day ${state.day}: ${today.minPct}–${today.maxPct}% estimated. `),
-        `Estimate from NASA's average of ${NASA.boneLossPctPerMonth.min}–${NASA.boneLossPctPerMonth.max}% per month on four-to-six month missions. Not a measurement of you. In partial gravity the rate is not yet known. `,
-        sourceLink(SOURCES.boneRisk)]);
+        h('span', { class: 'muted' }, `NASA's average of ${NASA.boneLossPctPerMonth.min}–${NASA.boneLossPctPerMonth.max}% per month, not a measurement of you. In partial gravity the rate is not yet known.`)]);
     grid.append(fig);
     draw(canvas, {
       type: 'line',
@@ -141,8 +137,7 @@ export function render(root, ctx) {
     const { fig, canvas } = figure('radiation', 'Cumulative radiation dose', `Cumulative radiation dose against the ${NASA.careerLimitMsv} mSv career limit`,
       [h('span', null, `Day ${state.day}: ${now.cumulativeMsv} of ${NASA.careerLimitMsv} mSv (${now.pctOfLimit}%). Projected at day ${p.stayDays}: ${now.projectedMsv} mSv. `),
         statusBadge(states.radiation.status),
-        ' Dose rate for this mission profile from NASA\'s radiation standard brief. Dosimeter readings are simulated. ',
-        sourceLink(SOURCES.radiationBrief)]);
+        h('span', { class: 'muted' }, ' NASA dose rate for this mission, simulated dosimeter.')]);
     grid.append(fig);
     draw(canvas, {
       type: 'line',

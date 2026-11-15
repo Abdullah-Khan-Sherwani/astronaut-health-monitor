@@ -27,10 +27,6 @@ export function statusBadge(status) {
     STATUS_LABEL[status] ?? STATUS_LABEL.none);
 }
 
-export function sourceLink(source) {
-  return h('a', { class: 'source', href: source.url, target: '_blank', rel: 'noopener' }, `Source: ${source.title}`);
-}
-
 export function signed(delta) {
   return `${delta > 0 ? '+' : ''}${delta} vs your 14-day average`;
 }

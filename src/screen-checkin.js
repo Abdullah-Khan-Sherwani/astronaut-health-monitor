@@ -1,7 +1,6 @@
 import { INDICATORS, CHECKIN_STEPS } from './indicators.js';
-import { SOURCES } from './nasa-data.js';
 import { classify, valueOf } from './rules.js';
-import { h, statusBadge, sourceLink } from './ui.js';
+import { h, statusBadge } from './ui.js';
 
 const byId = id => INDICATORS.find(i => i.id === id);
 const STEPS = [...CHECKIN_STEPS.map(ids => ({ kind: 'reading', ids })), { kind: 'journal' }, { kind: 'review' }];
@@ -61,7 +60,7 @@ export function render(root, ctx) {
 
   root.append(
     h('h1', null, state.hasCheckedInToday ? 'Update today\'s check-in' : 'Daily check-in'),
-    h('p', { class: 'muted' }, `Step ${step + 1} of ${STEPS.length}`),
+    h('p', { class: 'muted step-count' }, `Step ${step + 1} of ${STEPS.length}`),
     h('progress', { max: String(STEPS.length), value: String(step + 1), 'aria-label': 'Check-in progress' }),
     h('form', { class: 'wizard', novalidate: true, onsubmit: e => { e.preventDefault(); if (current.kind === 'review') save(); else go(step + 1); } },
       body,
@@ -112,10 +111,10 @@ function readingStep(current, ctx) {
     block.append(
       h('h3', null, 'How to measure it'),
       h('ol', null, ind.howTo.map(s => h('li', null, s))),
-      h('h3', null, 'Why it matters in space'),
-      h('p', null, ind.why),
-      h('p', { class: 'meta' }, sourceLink(ind.source)));
-    if (ind.appRuleNote) block.append(h('p', { class: 'muted' }, ind.appRuleNote));
+      h('details', null,
+        h('summary', null, 'Why it matters in space'),
+        h('p', null, ind.why),
+        ind.appRuleNote ? h('p', { class: 'muted' }, ind.appRuleNote) : null));
     section.append(block);
     showBadge();
   }
@@ -131,8 +130,7 @@ function journalStep() {
       oninput: e => { draft.journal = e.target.value; },
     }, draft.journal ?? ''),
     errorLine('journal'),
-    h('p', null, 'NASA encourages crews to keep a regular journal as self-care during long isolation.'),
-    h('p', { class: 'meta' }, sourceLink(SOURCES.behaviorRisk)));
+    h('p', { class: 'muted' }, 'NASA encourages crews to keep a regular journal as self-care during long isolation.'));
 }
 
 function reviewStep() {

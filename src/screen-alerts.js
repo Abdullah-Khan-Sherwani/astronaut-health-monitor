@@ -1,6 +1,6 @@
-import { NASA, SOURCES } from './nasa-data.js';
+import { NASA } from './nasa-data.js';
 import { buildAlerts, buildReport, buildCsv, needsAttention, ESCALATION_LABEL } from './alerts.js';
-import { h, statusBadge, sourceLink } from './ui.js';
+import { h, statusBadge } from './ui.js';
 
 const EVENT_NAME = { sep: 'Solar particle event', cme: 'Coronal mass ejection' };
 let reportOpen = false;
@@ -26,8 +26,7 @@ export function render(root, ctx) {
       h('p', null, a.detail),
       a.actions.length ? h('ol', null, a.actions.map(step => h('li', null, step))) : null,
       ESCALATION_LABEL[a.escalation] ? h('p', { class: 'escalation' }, ESCALATION_LABEL[a.escalation]) : null,
-      a.delayText ? h('p', null, a.delayText) : null,
-      h('p', { class: 'meta' }, sourceLink(a.source)));
+      a.delayText ? h('p', { class: 'muted' }, a.delayText) : null);
   }
 
   function weatherCard({ weather }) {
@@ -43,9 +42,8 @@ export function render(root, ctx) {
       summary.events.length ? h('ul', null, summary.events.map(e => h('li', null,
         `${EVENT_NAME[e.type]}, ${new Date(e.time).toISOString().slice(0, 16).replace('T', ' ')} UTC `,
         e.link ? h('a', { href: e.link, target: '_blank', rel: 'noopener' }, 'NASA record') : null))) : null,
-      h('p', null, `${NASA.speLimitMsv} mSv per event, ${NASA.careerLimitMsv} mSv career (NASA). `, sourceLink(SOURCES.radiationBrief)),
+      h('p', null, `NASA limits: ${NASA.speLimitMsv} mSv per event, ${NASA.careerLimitMsv} mSv career.`),
       h('p', { class: 'muted' }, 'DONKI reports events observed from near Earth. A real vehicle would also use its own dosimeters.'),
-      h('p', { class: 'meta' }, sourceLink(SOURCES.donki)),
       h('label', { class: 'check', for: 'spe-demo' },
         h('input', { type: 'checkbox', id: 'spe-demo', checked: state.speDemo, onchange: e => { store.setSpeDemo(e.target.checked); ctx.refresh(); } }),
         'Simulate a solar particle event (demo)'));
