@@ -63,7 +63,7 @@ export const INDICATORS = [
     question: 'What is your blood sugar before eating?',
     fields: [{ key: 'glucose', label: 'mg/dL', min: 20, max: 600, step: 1 }],
     green: { min: 70, max: 99 },
-    classify: v => band(v, x => x >= 70 && x <= 99, x => x >= 100 && x <= 125),
+    classify: v => band(v, x => x >= 70 && x < 100, x => x >= 100 && x < 126),
     format: v => `${v} mg/dL`,
     why: 'The challenge lists blood sugar as a useful indicator, and NASA lists inadequate food and nutrition as a spaceflight risk.',
     howTo: ['Measure before your first meal.', 'Clean and dry a fingertip.', 'Apply one drop of blood to the test strip.'],

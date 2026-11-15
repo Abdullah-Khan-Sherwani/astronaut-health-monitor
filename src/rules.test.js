@@ -8,7 +8,7 @@ const cases = {
        [{ sys: 139, dia: 89 }, 'amber'], [{ sys: 140, dia: 70 }, 'red'], [{ sys: 118, dia: 90 }, 'red'],
        [{ sys: 89, dia: 70 }, 'red'], [{ sys: 100, dia: 59 }, 'red']],
   hr: [[40, 'green'], [100, 'green'], [101, 'amber'], [120, 'amber'], [121, 'red'], [39, 'red']],
-  glucose: [[70, 'green'], [99, 'green'], [100, 'amber'], [125, 'amber'], [126, 'red'], [69, 'red']],
+  glucose: [[70, 'green'], [99, 'green'], [99.5, 'green'], [100, 'amber'], [125, 'amber'], [125.5, 'amber'], [126, 'red'], [69, 'red']],
   temp: [[36.1, 'green'], [37.2, 'green'], [37.3, 'amber'], [38.0, 'amber'], [38.1, 'red'], [36.0, 'amber']],
   sleep: [[7, 'green'], [6.9, 'amber'], [6, 'amber'], [5.9, 'red']],
   mood: [[5, 'green'], [4, 'green'], [3, 'amber'], [2, 'red'], [1, 'red']],
