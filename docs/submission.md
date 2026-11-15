@@ -60,7 +60,8 @@ device, and a service worker lets the app reload with no connection.
 
 *What is real and what is simulated.* Crew readings are simulated, because real astronaut medical
 data is not public; the app says so on every screen. The limits, rates and guidance are real and
-each links to its source. Where a cut-off is our own rule, the screen says that too. The app is
+all are listed with their sources in the project README. Where a cut-off is our own rule, the
+note under that reading says so. The app is
 decision support and does not diagnose.
 
 *What comes next.* Input from wearables and the vehicle's own dosimeters, and a view for the crew
@@ -126,8 +127,8 @@ or audio are used. The app does not call an AI model. No NASA logos or branding 
    | Hostile, closed environment | Cabin CO2 and temperature judged against NASA-STD-3001 |
 
 6. **Why it is valid.** NASA-STD-3001 limits: 600 mSv, 250 mSv, 3 mmHg CO2, 18–27 °C. NASA's
-   1–1.5% monthly bone loss. Live NASA DONKI feed. Every threshold links to its source, our own
-   rules are labelled, readings are simulated and say so. 46 automated tests.
+   1–1.5% monthly bone loss. Live NASA DONKI feed. Every threshold is listed with its source in the README, our
+   own rules are labelled, readings are simulated and say so. 46 automated tests.
 7. **What comes next.** Wearable and dosimeter input, a crew medical officer view, validation with
    flight surgeons.
 
@@ -172,7 +173,8 @@ The ten questions in the Karachi challenge guide, with the screen that shows the
 Harder questions to expect:
 
 - *Is the data real?* The readings are simulated and labelled. The limits and rates are NASA's.
-- *Why these thresholds?* Each links to its source on screen; where it is ours, the screen says so.
+- *Why these thresholds?* Each is listed with its source in the README (Sources section); where it
+  is ours, the note under the reading says so. Have the README open in a tab to show it.
 - *Is the bone-loss number a measurement?* No. It is NASA's average range, drawn only to day 180
   because that is as far as the data reaches, and the caption says it is not a measurement.
 - *Does DONKI apply at Mars?* It reports events seen from near Earth. The card says a real vehicle

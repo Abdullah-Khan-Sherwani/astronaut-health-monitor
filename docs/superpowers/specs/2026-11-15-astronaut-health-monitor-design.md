@@ -43,6 +43,10 @@ submission page.
 - Presentation is a 7-slide deck, not a video. (Team)
 - Use the live NASA space-weather feed; the team supplies a personal api.nasa.gov key. (Team)
 - Work in `astronaut-health-monitor/`; nothing is pushed. (Team)
+- Redesign on branch `feat/ui-redesign` (15 Nov): centred layout, near-black theme, a translucent
+  blue body figure as the centrepiece, less text per screen. Source links are removed from the
+  screens and listed at the bottom of `README.md`; this replaces the on-screen source links
+  described in sections 4 and 6. (Team)
 
 ## 4. Decisions made by the plan author (review these)
 

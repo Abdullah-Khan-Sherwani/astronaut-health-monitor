@@ -46,8 +46,29 @@ first visit the app works with no connection.
 
 **Crew readings are simulated.** Real astronaut medical data is not public. The 119 days of
 history are generated from a fixed seed with scripted episodes so the demo is repeatable. The
-limits, rates and guidance the readings are judged against are real and each one links to its
-source on screen.
+limits, rates and guidance the readings are judged against are real. Every one is listed with
+its source under [Sources](#sources) at the bottom of this page.
+
+## Use of AI
+
+The idea, the scope and the decisions are the team's. The code and documents were written with
+AI assistance (Claude, by Anthropic) and reviewed by the team. No AI-generated images, video or
+audio are used, and the app itself does not call any AI model.
+
+## Credits
+
+- [Chart.js](https://www.chartjs.org/) 4.4.7, MIT licence, included in `vendor/`.
+- This project is not affiliated with or endorsed by NASA. It uses no NASA logos or branding.
+
+## More
+
+- Design: `docs/superpowers/specs/2026-11-15-astronaut-health-monitor-design.md`
+- Build plan: `docs/superpowers/plans/2026-11-15-astronaut-health-monitor.md`
+- Submission text, slide outline and judge questions: `docs/submission.md`
+
+## Sources
+
+The app shows no source links on screen, to keep the screens clear. Everything it uses is listed here.
 
 ### NASA data and resources
 
@@ -76,23 +97,27 @@ source on screen.
 | Body temperature | [MedlinePlus](https://medlineplus.gov/ency/article/001982.htm) |
 | Sleep | [CDC](https://www.cdc.gov/sleep/about/index.html) |
 
-Where a cut-off has no published source (the mood scale, the vision report, symptom severity, the
-six-hour sleep line, the exercise bands, the space-weather time windows) the screen says it is
-this app's own rule.
+Some cut-offs have no published source and are this app's own rules: the mood scale, the vision
+report, symptom severity, the six-hour sleep line, the heart-rate red line, the exercise bands and
+the space-weather time windows. The note under each reading in the app says so.
 
-## Use of AI
+### Every NASA page and document used
 
-The idea, the scope and the decisions are the team's. The code and documents were written with
-AI assistance (Claude, by Anthropic) and reviewed by the team. No AI-generated images, video or
-audio are used, and the app itself does not call any AI model.
-
-## Credits
-
-- [Chart.js](https://www.chartjs.org/) 4.4.7, MIT licence, included in `vendor/`.
-- This project is not affiliated with or endorsed by NASA. It uses no NASA logos or branding.
-
-## More
-
-- Design: `docs/superpowers/specs/2026-11-15-astronaut-health-monitor-design.md`
-- Build plan: `docs/superpowers/plans/2026-11-15-astronaut-health-monitor.md`
-- Submission text, slide outline and judge questions: `docs/submission.md`
+- [NASA: 5 Hazards of Human Spaceflight](https://www.nasa.gov/hrp/hazards/)
+- [NASA: Space Radiation hazard](https://www.nasa.gov/hrp/hazard-space-radiation/)
+- [NASA: Isolation and Confinement hazard](https://www.nasa.gov/hrp/hazard-isolation-and-confinement/)
+- [NASA: Distance from Earth hazard](https://www.nasa.gov/hrp/hazard-distance-from-earth/)
+- [NASA: Gravity Fields hazard](https://www.nasa.gov/hrp/hazard-gravity-fields/)
+- [NASA: Hostile/Closed Environments hazard](https://www.nasa.gov/hrp/hazard-hostile-closed-environments/)
+- [NASA-STD-3001 brief OCHMO-TB-020: Ionizing Radiation Protection](https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf)
+- [NASA-STD-3001 brief OCHMO-TB-004: Carbon Dioxide](https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf)
+- [NASA-STD-3001 brief OCHMO-TB-002: Life Support](https://www.nasa.gov/wp-content/uploads/2023/07/eclss-technical-brief-ochmo.pdf)
+- [NASA-STD-3001 Volume 1: Crew Health](https://www.nasa.gov/reference/nasa-std-3001v1/)
+- [NASA: Risk of Spaceflight-Induced Bone Changes](https://www.nasa.gov/reference/risk-of-spaceflight-induced-bone-changes/)
+- [NASA: Risk of Spaceflight Associated Neuro-ocular Syndrome](https://www.nasa.gov/reference/risk-of-spaceflight-associated-neuro-ocular-syndrome-sans/)
+- [NASA: Risk from Inadequate Sleep and Irregular Schedules](https://www.nasa.gov/reference/risk-from-inadequate-sleep-and-irregular-schedules/)
+- [NASA: Risk of Cardiovascular Adaptations](https://www.nasa.gov/reference/risk-of-cardiovascular-adaptations/)
+- [NASA: Risk of Behavioral Conditions and Psychiatric Disorders](https://www.nasa.gov/reference/risk-of-behavioral-conditions-and-psychiatric-disorders/)
+- [NASA: Astronaut Exercise](https://www.nasa.gov/missions/station/iss-research/astronaut-exercise/)
+- [NASA Science: Moon Facts](https://science.nasa.gov/moon/facts/)
+- [NASA CCMC DONKI space weather database](https://ccmc.gsfc.nasa.gov/tools/DONKI/)
