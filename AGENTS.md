@@ -6,7 +6,7 @@ Scoped `AGENTS.md` files in subfolders add to this one for their folder. Direct 
 take precedence. These rules favor caution over speed; for trivial tasks, use judgment.
 
 ## 0. Project Status (fill this in first)
-- **Production with real users:** yes / no  <!-- edit this line; agents must read it before changing code -->
+- **Production with real users:** no
 - **No:** there is nothing to stay compatible with. Don't patch around errors and bugs; fix them
   with a complete, proper refactor that leaves the code more readable and maintainable. Drop old
   interfaces, shims, fallbacks and migration paths instead of keeping them for compatibility.
@@ -88,7 +88,9 @@ take precedence. These rules favor caution over speed; for trivial tasks, use ju
 - Atomic commits: one commit = one change.
 
 ## Project-specific rules
-<!-- Add your stack, architecture and constraints here. Keep them short. -->
+- Static site: plain HTML, CSS and JavaScript ES modules. No build step, no npm dependencies.
+- Run `npm test` before committing. Serve with `npm run serve`.
+- The design and plan are in `docs/superpowers/`.
 
 ---
 

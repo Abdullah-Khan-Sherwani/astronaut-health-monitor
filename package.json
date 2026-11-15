@@ -1,0 +1,10 @@
+{
+  "name": "astronaut-health-monitor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"src/*.test.js\"",
+    "serve": "python3 -m http.server 8000",
+    "weather": "node --env-file-if-exists=.env fetch-space-weather.mjs"
+  }
+}
