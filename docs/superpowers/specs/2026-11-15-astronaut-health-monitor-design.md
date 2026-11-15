@@ -47,6 +47,11 @@ submission page.
   blue body figure as the centrepiece, less text per screen. Source links are removed from the
   screens and listed at the bottom of `README.md`; this replaces the on-screen source links
   described in sections 4 and 6. (Team)
+- Second pass on the same branch (15 Nov): no status colours on the figure, only shades of blue
+  with no two touching parts alike; status as a dot and a word instead of pill tags; one panel
+  and one animated disclosure style on every screen; one chart at a time on Trends, in blues with
+  no purple; alerts and hazards as expanding rows; the front page shows only the count, the
+  figure and its labels until a part is selected. (Team)
 
 ## 4. Decisions made by the plan author (review these)
 
@@ -179,20 +184,23 @@ A top bar on every screen shows the mission day, the mission profile selector, a
 "simulated data" label.
 
 1. **Body map (home).** Figure with six body regions (head, eyes, heart, gut, bones, whole body)
-   plus a "Cabin" item beside it, each green, amber or red with an icon and a word. Shows the
-   count of items needing attention, the top alert, the next scheduled task, and "check-in due"
-   until today's check-in is done. Selecting a region opens a panel with latest readings, the
+   plus a "Cabin" frame around it. The figure is drawn in blues only; each label carries the
+   status as a dot and a word. Shows the count of items needing attention, a link to the alerts,
+   and a check-in button until today's check-in is done. Nothing is selected at first, so the
+   screen stays uncluttered. Selecting a region opens a sheet with latest readings, the
    change from the wearer's 14-day average, a link to the trend, why it matters in space, how to
    measure it, the action, and a form to report a symptom or discomfort in that body region.
 2. **Daily check-in.** One step per indicator, plus one step for the two cabin readings and one
    for the journal, each with how to measure it and why it matters, then a review step. Any step
    can be skipped.
-3. **Trends.** A chart per indicator with the normal band shaded and a 7 / 30 / all-days toggle;
+3. **Trends.** A list of readings and one chart at a time for the chosen reading, with the normal
+   band shaded and a 7 / 30 / all-days toggle;
    cabin CO2 and temperature with NASA's limits drawn; the bone-loss estimate band, drawn only
    to day 180 and labelled an estimate from NASA's average; the cumulative radiation line
    against the 600 mSv limit.
 4. **Alerts and actions.** Everything amber or red, worst first, each with meaning, action,
-   escalation level and reply delay for the current mission. Live space-weather card. "Build
+   escalation level and reply delay for the current mission, as rows that expand one at a time.
+   Live space-weather panel. "Build
    report for ground" produces a text summary to copy; the screen states nothing is transmitted.
    "Download health record" saves the readings as a CSV file.
 5. **Routine and rewards.** Today's seven tasks in time order (07:30 health check-in, 08:00
@@ -200,8 +208,8 @@ A top bar on every screen shows the mission day, the mission profile selector, a
    cardio 60 min, 20:30 journal entry, 21:30 wind-down time), each citing its NASA reason and
    marked overdue once its time has passed; streak, weekly ring, personal best. The journal entry
    is written as a step of the check-in, so the journal and check-in tasks tick themselves.
-6. **Hazard library.** NASA's five hazards as cards, each paraphrased with its source link, links
-   to the indicators the app tracks for it, and one line on how the app responds to that hazard.
+6. **Hazard library.** NASA's five hazards as rows that expand one at a time, each paraphrased,
+   with links to the indicators the app tracks for it, and one line on how the app responds to that hazard.
 
 Status is never shown by colour alone. Every user-entered string is rendered as text, never HTML.
 The top bar shows "Offline: using saved data" when the device has no connection. A footer on

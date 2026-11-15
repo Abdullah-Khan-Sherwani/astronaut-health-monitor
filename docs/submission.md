@@ -31,20 +31,20 @@ for a reply at Mars.
 *What it does.* Six screens:
 
 1. Body map. A figure with seven selectable regions (head, eyes, heart, gut, bones and muscles,
-   whole body, cabin). Each shows OK, Watch or Act now with an icon and a word as well as a colour.
-   Selecting a region shows the reading, how it compares with the crew member's own 14-day
+   whole body, cabin). Each label shows OK, Watch or Act now as a word as well as a colour; the
+   figure itself is drawn in blues only. Selecting a region opens a sheet with the reading, how it compares with the crew member's own 14-day
    average, why it matters in space, the steps to take, and who to tell. Symptoms can be reported
    on any region.
 2. Check-in. A guided entry of blood pressure, heart rate, fasting blood sugar, body temperature,
    sleep, mood, vision, cabin CO2 and cabin temperature, plus a journal. Each step explains how to
    take the measurement and why it is needed. Out-of-range entries are rejected with the allowed
    range.
-3. Trends. A chart of every reading against its normal range, exercise minutes against NASA's
-   two-hour target, an estimated bone-loss band, and cumulative radiation dose projected to the
-   end of the stay against the 600 mSv career limit.
+3. Trends. One chart at a time, chosen from a list of readings: each reading against its normal
+   range, exercise minutes against NASA's two-hour target, an estimated bone-loss band, and
+   cumulative radiation dose projected to the end of the stay against the 600 mSv career limit.
 4. Alerts. Everything that needs attention in order of urgency, each with numbered actions and an
    escalation level: self-care, tell the crew medical officer after three flagged days, contact
-   the flight surgeon for anything red. A space-weather card shows NASA DONKI events. A report for
+   the flight surgeon for anything red. A space-weather panel shows NASA DONKI events. A report for
    ground can be built and copied, and the full record downloads as a CSV file.
 5. Routine. The day's health tasks with times, overdue and next marks, the reason for each task, a
    check-in streak and a weekly completion ring.
@@ -156,10 +156,10 @@ The ten questions in the Karachi challenge guide, with the screen that shows the
 5. **What happens to records during a communication delay or outage?** The record lives on the
    device, the app reloads with no connection, the record exports as CSV, and the guidance states
    the reply delay and tells the crew to start onboard steps. *Alerts.*
-6. **Are the charts simple?** One reading per chart, the normal range shaded, NASA limits drawn as
-   lines, three time ranges. *Trends.*
+6. **Are the charts simple?** One chart on screen at a time, the normal range shaded, NASA limits
+   drawn as dashed lines, three time ranges. *Trends.*
 7. **How do reminders and alerts work?** Tasks have times and show Overdue or Next; the home screen
-   shows the count needing attention, the top alert and the next task. *Routine, Body map, Alerts.*
+   shows the count needing attention and links to the alerts. *Routine, Body map, Alerts.*
 8. **How does it give guidance without replacing diagnosis?** Guidance is limited to
    countermeasures NASA documents and to who to tell. It never names a condition. Every screen
    carries "Decision support only, not a medical diagnosis." *Alerts.*
@@ -167,7 +167,7 @@ The ten questions in the Karachi challenge guide, with the screen that shows the
    rating, a journal (a NASA-documented countermeasure), wind-down and bright-light tasks, and
    escalation to the flight surgeon when either is red. *Check-in, Routine.*
 10. **How does it stay usable and reliable in space?** No server, no network needed after the first
-    load, readable text, status shown by icon and word as well as colour, full keyboard use, input
+    load, readable text, status shown by a word as well as colour, full keyboard use, input
     validation, and tested health rules. *All screens.*
 
 Harder questions to expect:
@@ -177,7 +177,7 @@ Harder questions to expect:
   is ours, the note under the reading says so. Have the README open in a tab to show it.
 - *Is the bone-loss number a measurement?* No. It is NASA's average range, drawn only to day 180
   because that is as far as the data reaches, and the caption says it is not a measurement.
-- *Does DONKI apply at Mars?* It reports events seen from near Earth. The card says a real vehicle
+- *Does DONKI apply at Mars?* It reports events seen from near Earth. The panel says a real vehicle
   would also use its own dosimeters.
 - *Why 1.5 mSv a day for Mars transit?* It is the worked example in NASA's brief, not a standard,
   and is labelled as a scenario value.
