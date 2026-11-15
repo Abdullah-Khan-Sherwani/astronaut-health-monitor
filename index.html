@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Astronaut Health Monitor</title>
+  <meta name="description" content="A self-assessment tool for astronauts on long missions. NASA Space Apps 2026 prototype.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#app">Skip to content</a>
+
+  <header class="top">
+    <div class="brand">
+      <span class="brand-name">Astronaut Health Monitor</span>
+      <span class="brand-day">Mission day <span id="mission-day">120</span></span>
+    </div>
+    <div class="mission">
+      <label for="profile">Mission</label>
+      <select id="profile"></select>
+      <span id="profile-facts" class="facts"></span>
+    </div>
+    <div class="flags">
+      <span id="offline" class="flag flag-offline" hidden>Offline: using saved data</span>
+      <span class="flag">Simulated data</span>
+      <button id="reset" type="button" class="quiet">Reset demo</button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Screens">
+    <a href="#/" data-route="">Body map</a>
+    <a href="#/checkin" data-route="checkin">Check-in</a>
+    <a href="#/trends" data-route="trends">Trends</a>
+    <a href="#/alerts" data-route="alerts">Alerts</a>
+    <a href="#/routine" data-route="routine">Routine</a>
+    <a href="#/library" data-route="library">Hazards</a>
+  </nav>
+
+  <main id="app" tabindex="-1">
+    <p class="notice">Loading…</p>
+  </main>
+
+  <footer class="foot">Prototype for NASA Space Apps 2026. Decision support only, not a medical diagnosis.</footer>
+
+  <script>
+    // Module scripts do not load from file://, so say how to run it instead of showing a blank page.
+    if (location.protocol === 'file:') {
+      document.getElementById('app').innerHTML =
+        '<p class="notice">This page needs a local server. In this folder run: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000</code></p>';
+    }
+  </script>
+  <script src="vendor/chart.umd.js"></script>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
